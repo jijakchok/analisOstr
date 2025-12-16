@@ -1,0 +1,13 @@
+# Игнорируем файлы окружения
+.env
+.env.local
+.env.*.local
+
+# Игнорируем секретные настройки
+local_settings.py
+secrets.py
+
+# Игнорируем медиафайлы и базу данных
+
+*.sqlite3
+*.sqlite

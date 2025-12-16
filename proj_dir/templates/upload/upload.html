@@ -1,0 +1,19 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-5">
+  <h1 class="text-center mb-4">Анализ бизнес-предложений</h1>
+  <div class="card shadow-sm">
+    <div class="card-body">
+      <form method="POST" enctype="multipart/form-data">
+        {% csrf_token %}
+        <div class="mb-3">
+          <label class="form-label">Загрузите документ (PDF, DOCX, TXT)</label>
+          <input type="file" name="document" class="form-control" accept=".pdf,.docx,.txt" required>
+        </div>
+        <button type="submit" class="btn btn-primary w-100">Анализировать</button>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

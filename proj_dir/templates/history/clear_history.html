@@ -1,0 +1,26 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="card shadow-sm p-4">
+        <h2 class="mb-4 text-center">Очистка истории</h2>
+        <div class="alert alert-warning">
+            <h4>Внимание!</h4>
+            <p>Очистка истории приведет к удалению всех ваших анализов. Эту операцию нельзя отменить.</p>
+        </div>
+
+        <form method="post">
+            {% csrf_token %}
+            <div class="mb-3">
+                <p>Вы действительно хотите очистить историю анализов?</p>
+                <p class="text-muted">Это действие удалит все ваши предыдущие анализы.</p>
+            </div>
+
+            <div class="d-flex justify-content-between">
+                <a href="{% url 'history' %}" class="btn btn-secondary">Отмена</a>
+                <button type="submit" class="btn btn-danger">Очистить историю</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

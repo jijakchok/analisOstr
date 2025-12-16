@@ -1,0 +1,179 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-5">
+  <h1 class="text-center mb-4">Результат анализа</h1>
+
+  <!-- Кнопки скачивания -->
+  <div class="d-flex justify-content-end mb-4 gap-2">
+    <a href="{% url 'download_pdf' analysis_id=analysis.id %}" class="btn btn-outline-primary">
+      <i class="bi bi-file-earmark-pdf"></i> Скачать PDF
+    </a>
+    <a href="{% url 'download_txt' analysis_id=analysis.id %}" class="btn btn-outline-info">
+      <i class="bi bi-file-earmark-text"></i> Скачать TXT
+    </a>
+    <a href="{% url 'download_word' analysis_id=analysis.id %}" class="btn btn-outline-success">
+      <i class="bi bi-file-earmark-word"></i> Скачать Word
+    </a>
+  </div>
+
+  <!-- Риск-метрика -->
+  <div class="card mb-4 border-{{ risk_color }}">
+    <div class="card-body">
+      <h5 class="card-title">Общая оценка риска:
+        <span class="badge bg-{{ risk_color }} fs-4">{{ analysis.result.risk_score|floatformat:2 }}</span>
+      </h5>
+      <p class="card-text">
+        {% if analysis.result.risk_score > 0.7 %}
+        <strong class="text-danger">Высокий риск</strong> - документ содержит серьезные проблемы, требующие немедленного исправления
+        {% elif analysis.result.risk_score > 0.4 %}
+        <strong class="text-warning">Средний риск</strong> - документ имеет несколько проблемных мест, требующих внимания
+        {% else %}
+        <strong class="text-success">Низкий риск</strong> - документ в целом соответствует требованиям
+        {% endif %}
+      </p>
+    </div>
+  </div>
+
+  <!-- Подробный анализ -->
+  <div class="row mb-4">
+    <div class="col-md-6">
+      <div class="card">
+        <div class="card-header bg-primary text-white">
+          <h5 class="mb-0">Выявленные проблемы</h5>
+        </div>
+        <div class="card-body">
+          {% if analysis.result.issues|length > 0 %}
+            {% for issue in analysis.result.issues %}
+              <div class="alert alert-warning mb-3">
+                <h6 class="alert-heading">
+                  Критерий {{ issue.metric }}:
+                  {% if issue.metric == 1 %}Скрытые платежи{% elif issue.metric == 2 %}Завышенные цены{% elif issue.metric == 3 %}Неполнота данных{% elif issue.metric == 4 %}Рискованные условия{% elif issue.metric == 5 %}Отсутствие гарантий{% elif issue.metric == 6 %}Нечеткие формулировки{% elif issue.metric == 7 %}Юридические риски{% elif issue.metric == 8 %}Непрозрачность{% endif %}
+                  {% if issue.severity >= 4 %}
+                  <span class="badge bg-danger ms-2">Важность: {{ issue.severity }}/5</span>
+                  {% elif issue.severity >= 3 %}
+                  <span class="badge bg-warning ms-2">Важность: {{ issue.severity }}/5</span>
+                  {% elif issue.severity >= 2 %}
+                  <span class="badge bg-info ms-2">Важность: {{ issue.severity }}/5</span>
+                  {% else %}
+                  <span class="badge bg-success ms-2">Важность: {{ issue.severity }}/5</span>
+                  {% endif %}
+                </h6>
+                <p class="mb-1"><strong>Проблема в тексте:</strong> "{{ issue.text }}"</p>
+                <p class="mb-0"><strong>Объяснение:</strong> {{ issue.explanation }}</p>
+              </div>
+            {% endfor %}
+          {% else %}
+            <div class="alert alert-success">
+              Проблемные места не найдены.
+            </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+
+    <div class="col-md-6">
+      <div class="card">
+        <div class="card-header bg-success text-white">
+          <h5 class="mb-0">Конкретные рекомендации</h5>
+        </div>
+        <div class="card-body">
+          {% if analysis.result.suggestions|length > 0 %}
+            <ol class="list-group list-group-numbered">
+              {% for suggestion in analysis.result.suggestions %}
+                <li class="list-group-item">{{ suggestion }}</li>
+              {% endfor %}
+            </ol>
+          {% else %}
+            <div class="alert alert-info">
+              Рекомендации по улучшению не требуются.
+            </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Текст документа с подсветкой -->
+  <div class="card">
+    <div class="card-header bg-secondary text-white">
+      <h5 class="mb-0">Текст документа с выделением проблемных мест</h5>
+    </div>
+    <div class="card-body" id="analysis-text" style="white-space: pre-line; line-height: 1.6;">
+      {{ analysis.text|linebreaksbr }}
+    </div>
+  </div>
+
+</div>
+
+<!-- Стили для подсветки -->
+<style>
+  mark.bg-warning.text-dark {
+    padding: 0 2px;
+    border-radius: 3px;
+    font-weight: 600;
+  }
+  .card.border-danger { border-left: 5px solid #dc3545 !important; }
+  .card.border-warning { border-left: 5px solid #ffc107 !important; }
+  .card.border-success { border-left: 5px solid #198754 !important; }
+</style>
+
+<!-- JavaScript для подсветки с улучшенной обработкой -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const issues = {{ analysis.result.issues|safe|default:"[]" }};
+    const textElement = document.getElementById('analysis-text');
+    const riskScore = {{ analysis.result.risk_score|default:0.5 }};
+
+    // Определяем цвет для метрики риска
+    let riskColor = 'success';
+    if (riskScore > 0.7) riskColor = 'danger';
+    else if (riskScore > 0.4) riskColor = 'warning';
+    document.querySelectorAll('.risk-color').forEach(el => {
+        el.classList.add('text-' + riskColor);
+    });
+
+    if (textElement && issues && Array.isArray(issues)) {
+        let htmlContent = textElement.innerHTML;
+
+        // Сначала создаем карту проблемных фраз
+        const issueMap = new Map();
+        issues.forEach(issue => {
+            if (issue && issue.text && typeof issue.text === 'string' && issue.text.trim() !== '') {
+                const key = issue.text.trim().toLowerCase();
+                if (!issueMap.has(key)) {
+                    issueMap.set(key, {
+                        count: 0,
+                        severity: issue.severity,
+                        metric: issue.metric
+                    });
+                }
+                issueMap.get(key).count++;
+            }
+        });
+
+        // Подсветка проблемных фраз
+        issueMap.forEach((data, phrase) => {
+            try {
+                const escapedText = phrase.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                const regex = new RegExp(escapedText, 'gi');
+
+                htmlContent = htmlContent.replace(regex, match => {
+                    const bgColor = data.severity >= 4 ?
+                        'rgba(220, 53, 69, 0.3)' : // красный для высокой серьезности
+                        'rgba(255, 193, 7, 0.3)'; // желтый для средней
+
+                    return `<mark style="background-color: ${bgColor}; padding: 0 2px; border-radius: 2px; font-weight: 500;"
+                         title="Критерий ${data.metric}, Важность: ${data.severity}/5">${match}</mark>`;
+                });
+            } catch (e) {
+                console.error('Ошибка при подсветке:', e);
+            }
+        });
+
+        textElement.innerHTML = htmlContent;
+    }
+});
+</script>
+
+{% endblock %}

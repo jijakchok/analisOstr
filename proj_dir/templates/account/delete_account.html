@@ -1,0 +1,26 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="card shadow-sm p-4">
+        <h2 class="mb-4 text-center">Удаление аккаунта</h2>
+        <div class="alert alert-warning">
+            <h4>Внимание!</h4>
+            <p>Удаление аккаунта приведет к удалению всех ваших данных, включая историю анализов. Эту операцию нельзя отменить.</p>
+        </div>
+
+        <form method="post">
+            {% csrf_token %}
+            <div class="mb-3">
+                <p>Вы действительно хотите удалить свой аккаунт?</p>
+                <p class="text-muted">Это действие необратимо и приведет к удалению всех ваших данных.</p>
+            </div>
+
+            <div class="d-flex justify-content-between">
+                <a href="{% url 'upload' %}" class="btn btn-secondary">Отмена</a>
+                <button type="submit" class="btn btn-danger">Удалить аккаунт</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
