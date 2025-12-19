@@ -1,6 +1,7 @@
 ```markdown
 # 📄 DocuAnalysis - Анализатор бизнес-документов с ИИ
 
+Деплой - http://185.185.142.136:8000/accounts/login/?next=/upload/
 [![Python](https://img.shields.io/badge/Python-3.10%2B-blue?logo=python)](https://www.python.org/)
 [![Django](https://img.shields.io/badge/Django-6.0-green?logo=django)](https://www.djangoproject.com/)
 [![Hugging Face](https://img.shields.io/badge/Hugging_Face-Qwen2.5--7B-informational?logo=huggingface)](https://huggingface.co/)
